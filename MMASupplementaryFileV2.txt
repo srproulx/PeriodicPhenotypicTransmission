@@ -1,0 +1,341 @@
+Associated Mathematica file for Proulx and Teotonio "Weak selection of phenotypic memory in periodic environments"
+This notebook creates figures and results in the paper.  Phenotypes and environmental optima are on the interval -1 to 1, fitness is Exp[-eta^2 (z-z*)^2], and lambda is per-generation asymptotic log growth. Evaluate the notebook from top to bottom. 
+Definitions
+In[265]:= okabeIto=Apply[RGBColor,{{0,0,0},{0.9`,0.6`,0},{0.35`,0.7`,0.9`},{0,0.6`,0.5`},{0.95`,0.9`,0.25`},{0,0.45`,0.7`},{0.8`,0.4`,0},{0.8`,0.6`,0.7`}},{1}];
+In[266]:= SetDirectory[NotebookDirectory[]];
+Analytic results for the derivative of the eigenvalues
+Model and parameters
+In[87]:= b={{beta1,1-beta1},{1-beta2,beta2}};
+betaAssumptions=Element[{beta1,beta2},Reals]&&0<beta1<1&&0<beta2<1;
+parameterRules=First[Solve[Join[Thread[{q1,q2}.b=={q1,q2}],{q1+q2==1,h==beta1+beta2-1}],{beta1,beta2,q1}]];
+b=Simplify[b/.parameterRules];
+assumptions=Element[{eta,h,q2,x},Reals]&&eta>0&&-1<h<1&&0<q2<1&&Element[k,Integers]&&k>=1&&(And@@(0<#<1&/@Flatten[b]));
+w[e_,z_]:=DiagonalMatrix[{Exp[-eta^2],Exp[-eta^2*(e-z)^2]}];
+Cycle and ancestral growth
+In[93]:= cycle=MatrixPower[w[-1,x].b,k].MatrixPower[w[1,x].b,k];
+polynomial=CharacteristicPolynomial[cycle,y];
+characteristic=polynomial/.y->Exp[2*k*lambda[x]];
+lambda0=FullSimplify[Log[Max@@Eigenvalues[w[-1,0].b]],assumptions]
+Out[96]= -eta^2
+Log-growth derivatives
+In[97]:= rule0={lambda[0]->lambda0};
+firstDerivative=FullSimplify[(D[characteristic,x]/.x->0)/.rule0,assumptions];
+rule1=First[Solve[firstDerivative==0,Derivative[1][lambda][0]]];
+secondDerivative=FullSimplify[(D[characteristic,{x,2}]/.x->0)/.Join[rule0,rule1],assumptions];
+rule2=First[Solve[secondDerivative==0,Derivative[2][lambda][0]]];
+lambda2=FullSimplify[Derivative[2][lambda][0]/.rule2,assumptions]
+Out[102]= -2 eta^2 q2+(4 eta^4 (-k+h (4+h k)+h^k (-4 h+(-1+h^2) k)) (-1+q2) q2)/((-1+h)^2 (1+h^k) k)
+Compact form
+In[103]:= short=FullSimplify[lambda2/.{h^(2*k)->u^2,h^k->u},assumptions&&Element[u,Reals]&&-1<u<1];
+compact=Collect[short,eta,Factor]/.u->h^k;
+compact
+Out[105]= -2 eta^2 q2+(4 eta^4 (4 h-4 h^(1+k)-k+h^2 k-h^k k+h^(2+k) k) (-1+q2) q2)/((-1+h)^2 (1+h^k) k)
+Which is equivalent to the expression that we present
+In[106]:= typesetForm = 2 eta^2 q2 (-1 + 2 eta^2 (1 - q2)
+  ((1 + h)/(1 - h) - 4 h (1 - u)/(k (1 - h)^2 (1 + u)))); 
+In[107]:= Simplify[typesetForm-compact/.{u->h^k}//Expand]
+Out[107]= 0
+Region plots for positive second derivatives
+In[108]:= memoryRegionFigure=GraphicsRow[{D2k2=compact/.{h->\[Beta]1+\[Beta]2-1,q2->(1-\[Beta]1)/(2-\[Beta]1-\[Beta]2)}/.{k->2};
+colors={Directive[okabeIto[[3]],Opacity[1]],Directive[okabeIto[[2]],Opacity[0.6`]],Directive[okabeIto[[4]],Opacity[0.6`]]};
+Show[RegionPlot[(D2k2/.{eta->1})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[1]],BoundaryStyle->None,Epilog->Inset[Style["\[Eta]^2 = 1",11,Black],{.4,.5}]],RegionPlot[(D2k2/.{eta->Sqrt[0.75]})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[2]],BoundaryStyle->None,Epilog->Inset[Style["\[Eta]^2 = 0.75",11,Black],{.34,.76}]],RegionPlot[(D2k2/.{eta->Sqrt[0.65]})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[3]] ,BoundaryStyle->None] ,Frame->True,FrameLabel->{Style[Subscript[\[Beta], 2],24,Bold],Style[Subscript[\[Beta], 1],24,Bold]},PlotRange->{{0,1},{0,1}},PlotRangePadding->Scaled[0.02`],Epilog->{Inset[Style["\[Eta]^2 = 0.75",10,Black],{.27,.72}],Inset[Style["\[Eta]^2 = 1",11,Black],{.4,.5}],Inset[Style["\[Eta]^2 = 0.65",11,Black],{.15,0.89}],Inset[Style["k=2",14,Black],{0.85,0.05}],Inset[Style["A",18,Black,Bold],{0.97,0.95}]}],
+
+
+
+D2k6=compact/.{h->\[Beta]1+\[Beta]2-1,q2->(1-\[Beta]1)/(2-\[Beta]1-\[Beta]2)}/.{k->6};
+
+
+colors={Directive[okabeIto[[3]],Opacity[1]],Directive[okabeIto[[2]],Opacity[0.6`]],Directive[okabeIto[[4]],Opacity[0.6`]]};
+Show[RegionPlot[(D2k6/.{eta->1})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[1]],BoundaryStyle->None,Epilog->Inset[Style["\[Eta]^2 = 1",11,Black],{.4,.5}]],RegionPlot[(D2k6/.{eta->Sqrt[0.75]})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[2]],BoundaryStyle->None,Epilog->Inset[Style["\[Eta]^2 = 0.75",11,Black],{.34,.76}]],RegionPlot[(D2k6/.{eta->Sqrt[0.5]})>0,{\[Beta]2,0,1},{\[Beta]1,0,1},PlotStyle->colors[[3]] ,BoundaryStyle->None] ,Frame->True,FrameLabel->{Style[Subscript[\[Beta], 2],24,Bold],Style[Subscript[\[Beta], 1],24,Bold]},PlotRange->{{0,1},{0,1}},PlotRangePadding->Scaled[0.02`],Epilog->{Inset[Style["\[Eta]^2 = 0.75",10,Black],{.6,.7}],Inset[Style["\[Eta]^2 = 1",11,Black],{.6,.55}],Inset[Style["\[Eta]^2 = 0.5",11,Black],{.6,0.89}],Inset[Style["k=6",14,Black],{0.85,0.05}],Inset[Style["B",18,Black,Bold],{0.97,0.95}]}] },Spacings->10,ImageSize->850]
+Out[108]= 
+In[109]:= Export["memory_invasion_regions.pdf",memoryRegionFigure];
+Main model definitions
+In[91]:= SetDirectory[NotebookDirectory[]];
+
+ClearAll[zOpt,w,fitness,transmissionMatrix,selectionMatrix,cycleMatrix,dominantEigenvalue2,lambdaExpression,gradientExpression,secondZ2Expression,lambdaCompiled,gradientCompiled,secondZ2Compiled,lambdaNumeric,etaFromSigma,sigmaFromEta,logit,invLogit,periodicPhenotypeCycle,mutualInformation,binaryEntropy,maximumInformation,relativeInformation,numericalFirstDerivativeCheck,firstZDerivativeNumeric,makeFirstDerivativeSurface,secondZDerivativeNumeric,makeSecondDerivativeSurface,firstDerivativeSurface,secondDerivativeSurface,simulateTrajectory,evolveToEquilibrium,makeTrajectoryFigure,makeMemoryRegionPanel];
+
+okabeIto=Apply[RGBColor,{{0,0,0},{0.9,0.6,0},{0.35,0.7,0.9},{0,0.6,0.5},{0.95,0.9,0.25},{0,0.45,0.7},{0.8,0.4,0},{0.8,0.6,0.7}},{1}];
+
+etaFromSigma[s_?NumericQ]:=1/(Sqrt[2] s);
+sigmaFromEta[x_?NumericQ]:=1/(Sqrt[2] x);
+
+zOpt[1]=-1;
+zOpt[2]=1;
+
+w[z_,e_Integer,eta_]:=Exp[-eta^2 (z-zOpt[e])^2];
+
+transmissionMatrix[beta1_,beta2_]:={{beta1,1-beta1},{1-beta2,beta2}};
+
+selectionMatrix[e_Integer,z1_,z2_,eta_]:=DiagonalMatrix[{w[z1,e,eta],w[z2,e,eta]}];
+
+cycleMatrix[z1_,z2_,beta1_,beta2_,eta_,k_Integer]:=Module[{b=transmissionMatrix[beta1,beta2],a1,a2},a1=selectionMatrix[1,z1,z2,eta].b;
+a2=selectionMatrix[2,z1,z2,eta].b;
+MatrixPower[a1,k].MatrixPower[a2,k]];
+
+dominantEigenvalue2[m_]:=(Tr[m]+Sqrt[Tr[m]^2-4 Det[m]])/2;
+
+lambdaExpression[k_Integer]:=lambdaExpression[k]=Log[dominantEigenvalue2[cycleMatrix[z1,z2,beta1,beta2,eta,k]]]/(2 k);
+
+gradientExpression[k_Integer]:=gradientExpression[k]=(D[lambdaExpression[k],#]&)/@{z1,z2,beta1,beta2};
+
+secondZ2Expression[k_Integer]:=secondZ2Expression[k]=D[lambdaExpression[k],{z2,2}]/. {z1->0,z2->0};
+
+lambdaCompiled[k_Integer]:=lambdaCompiled[k]=With[{expr=lambdaExpression[k]},Compile[{{z1,_Real},{z2,_Real},{beta1,_Real},{beta2,_Real},{eta,_Real}},Evaluate[expr]]];
+
+gradientCompiled[k_Integer]:=gradientCompiled[k]=With[{expr=gradientExpression[k]},Compile[{{z1,_Real},{z2,_Real},{beta1,_Real},{beta2,_Real},{eta,_Real}},Evaluate[expr]]];
+
+secondZ2Compiled[k_Integer]:=secondZ2Compiled[k]=With[{expr=secondZ2Expression[k]},Compile[{{beta1,_Real},{beta2,_Real},{eta,_Real}},Evaluate[Re[expr]]]];
+
+lambdaNumeric[params_List,etaValue_?NumericQ,k_Integer]:=Module[{m=N[IdentityMatrix[2]],dominantRoot,b,a1,a2,scale,logScale=0.},b=transmissionMatrix[params[[3]],params[[4]]];
+a1=N[selectionMatrix[1,params[[1]],params[[2]],etaValue].b];
+a2=N[selectionMatrix[2,params[[1]],params[[2]],etaValue].b];
+Do[m=m.a;
+scale=Max[Abs[Flatten[m]]];
+If[!TrueQ[scale>0.],Return[Indeterminate]];
+m=m/scale;
+logScale+=Log[scale],{a,Join[ConstantArray[a1,k],ConstantArray[a2,k]]}];
+dominantRoot=Max[Abs[Eigenvalues[m]]];
+If[!TrueQ[dominantRoot>0.],Return[Indeterminate]];
+(logScale+Log[dominantRoot])/(2 k)];
+Compare to DME
+In[129]:= kValue=6;
+etaValue=1;          
+beta1Value=5/6; 
+beta2Value=5/6;
+epsilonMaximum=0.5;
+
+lambdaAncestor=(Log[w[0,1,etaValue]]+Log[w[0,2,etaValue]])/2;
+
+(*Deterministic maternal effect,with phenotypes {-eps/2,+eps/2}*)
+dmeLogGrowth[eps_?NumericQ]:=(kValue-1)/(2 kValue) (Log[w[-eps/2,1,etaValue]]+Log[w[eps/2,2,etaValue]])+1/(2 kValue) (Log[w[eps/2,1,etaValue]]+Log[w[-eps/2,2,etaValue]]);
+
+(*State-transmission mutant,with phenotypes {-eps/2,+eps/2}*)
+stateLogGrowth[eps_?NumericQ]:=lambdaNumeric[{-eps/2,eps/2,beta1Value,beta2Value},etaValue,kValue];
+
+dmeColor=RGBColor[0.80,0.20,0.15];
+stateColor=RGBColor[0.00,0.45,0.70];
+
+
+
+dmeComparisonFigure=Plot[{Exp[dmeLogGrowth[eps]],Exp[stateLogGrowth[eps]]},{eps,0,epsilonMaximum},Frame->True,FrameLabel->{"Change in phenotype","Fitness"},ImageSize->430,BaseStyle->{FontFamily->"Helvetica",12}]
+
+Out[139]= 
+In[140]:= Export["DMECompare.pdf",dmeComparisonFigure];
+Simulation
+In[286]:= mainK=6;
+mainEta=Sqrt[0.75];
+mainInitialParameters={0.,0.1,0.99,0.01};
+mainTolerance=1/10^4;
+mainStepSize=1.;
+mainMaxSteps=10000;
+
+mainTrajectory=Module[{params=N[mainInitialParameters],gradFun=gradientCompiled[mainK],lamFun=lambdaCompiled[mainK],grad,effectiveGradient,index,records={},step=0,lam,info,maxGradient,x,env,pairedEnv,infoMaximum,m,eigensystem,dominantIndex,state,states,b,joint,pEnv,pPhen,mutualInfo},env=Join[ConstantArray[1,mainK],ConstantArray[2,mainK]];
+pairedEnv=RotateLeft[env];
+infoMaximum=If[mainK>2,N[1+(1/mainK) Log[2,1/mainK]+(1-1/mainK) Log[2,1-1/mainK]],Indeterminate];
+While[step<=mainMaxSteps,grad=N[gradFun@@Join[params,{mainEta}]];
+effectiveGradient=grad {2.,2.,1.,1.};
+lam=N[lamFun@@Join[params,{mainEta}]];
+(*Relative information,calculated directly*)info=If[mainK>2,m=N[cycleMatrix[params[[1]],params[[2]],params[[3]],params[[4]],mainEta,mainK]];
+eigensystem=Eigensystem[Transpose[m]];
+dominantIndex=First[Ordering[Re[eigensystem[[1]]],-1]];
+state=Abs[Re[eigensystem[[2,dominantIndex]]]];
+state=state/Total[state];
+b=transmissionMatrix[params[[3]],params[[4]]];
+(*Offspring frequencies paired with the next environment*)states=Table[state=state.selectionMatrix[e,params[[1]],params[[2]],mainEta].b;
+state=state/Total[state];
+state,{e,env}];
+joint=Table[Total[Pick[states[[All,i]],pairedEnv,e]]/(2 mainK),{e,1,2},{i,1,2}];
+pEnv=Total/@joint;
+pPhen=Total[joint];
+mutualInfo=Total[Flatten[Table[If[joint[[e,i]]>0,joint[[e,i]] Log[2,joint[[e,i]]/(pEnv[[e]] pPhen[[i]])],0.],{e,1,2},{i,1,2}]]];
+N[mutualInfo/infoMaximum],Indeterminate];
+maxGradient=Max[Abs[effectiveGradient]];
+AppendTo[records,Join[{step},params,{lam,Norm[effectiveGradient],info}]];
+If[maxGradient<=mainTolerance||step==mainMaxSteps,Break[]];
+index=First[Ordering[Abs[effectiveGradient],-1]];
+(*Shifted phenotype logit;ordinary retention logit*)x=If[index<=2,Log[(1+params[[index]])/(1-params[[index]])],Log[params[[index]]/(1-params[[index]])]];
+x=x+mainStepSize effectiveGradient[[index]];
+params[[index]]=If[index<=2,2/(1+Exp[-x])-1,1/(1+Exp[-x])];
+step++;];
+<|"Columns"->{"Step","z1","z2","beta1","beta2","lambda","EvolutionaryGradientNorm","RelativeInformation"},"Data"->records,"FinalParameters"->params,"Steps"->step|>];
+
+trajectoryData=mainTrajectory["Data"];
+In[149]:= phenotypePlot=ListLinePlot[{trajectoryData[[All,{1,2}]],trajectoryData[[All,{1,3}]]},FrameTicksStyle->Directive[FontSize->16],Frame->True,FrameLabel->{Style["Evolutionary step",18,Bold],Style["Phenotypic value",18,Bold]},PlotRange->{All,{-1,1}},Epilog->{Inset[Style["A",16,Bold],Scaled[{0.9,0.92}]]},ImageSize->380];
+
+memoryPlot=ListLinePlot[{trajectoryData[[All,{1,4}]],trajectoryData[[All,{1,5}]]},FrameTicksStyle->Directive[FontSize->16],Frame->True,FrameLabel->{Style["Evolutionary step",18,Bold],Style["Retention probability",18,Bold]},PlotRange->{All,{0,1}},GridLines->{None,{1-1/mainK}},GridLinesStyle->Directive[GrayLevel[0.5],Dashed],Epilog->{Inset[Style["B",16,Bold],Scaled[{0.9,0.92}]]},ImageSize->380];
+
+gradientPlot=ListLinePlot[trajectoryData[[All,{1,7}]],FrameTicksStyle->Directive[FontSize->16],Frame->True,FrameLabel->{Style["Evolutionary step",18,Bold],Style["Gradient magnitude",18,Bold]},PlotRange->All,Epilog->{Inset[Style["C",16,Bold],Scaled[{0.9,0.92}]]},ImageSize->380];
+
+informationPlot=ListLinePlot[trajectoryData[[All,{1,8}]],FrameTicksStyle->Directive[FontSize->16],Frame->True,FrameLabel->{Style["Evolutionary step",18,Bold],Style["Relative information",18,Bold]},PlotRange->{All,{0,1}},Epilog->{Inset[Style["D",16,Bold],Scaled[{0.9,0.92}]]},ImageSize->380];
+
+trajectoryFigure=GraphicsGrid[{{phenotypePlot,memoryPlot},{gradientPlot,informationPlot}},Spacings->{0.5,0.5},ImageSize->800];
+
+trajectoryFigure
+Out[154]= 
+In[155]:= Export["evolutionary_trajectory.pdf",
+trajectoryFigure];
+Origin vs maintenance
+In[156]:= hysteresisK=6;
+etaSquaredValues=N[Append[Range[1/8,79/80,3/80],1]];
+noMemoryStartingParameters={0.,0.1,0.99,0.01};
+hysteresisTolerance=1/10^4;
+hysteresisStepSize=1.;
+hysteresisMaximumSteps=30000;
+
+(*Origin scan:increasing eta^2*)
+originData=Module[{parameters=N[noMemoryStartingParameters],gradientFunction=gradientCompiled[hysteresisK],gradient,effectiveGradient,parameterToChange,step,x,etaValue},Table[If[Abs[parameters[[1]]]<0.1||Abs[parameters[[2]]]<0.1,parameters=N[noMemoryStartingParameters]];
+etaValue=Sqrt[etaSquared];
+step=0;
+While[step<hysteresisMaximumSteps,gradient=N[gradientFunction[parameters[[1]],parameters[[2]],parameters[[3]],parameters[[4]],etaValue]];
+effectiveGradient=gradient {2.,2.,1.,1.};
+If[Max[Abs[effectiveGradient]]<=hysteresisTolerance,Break[]];
+parameterToChange=First[Ordering[Abs[effectiveGradient],-1]];
+x=If[parameterToChange<=2,Log[(1+parameters[[parameterToChange]])/(1-parameters[[parameterToChange]])],Log[parameters[[parameterToChange]]/(1-parameters[[parameterToChange]])]];
+x=x+hysteresisStepSize effectiveGradient[[parameterToChange]];
+parameters[[parameterToChange]]=If[parameterToChange<=2,2/(1+Exp[-x])-1,1/(1+Exp[-x])];
+step++;];
+{etaSquared,parameters[[1]],parameters[[2]],parameters[[3]],parameters[[4]],step},{etaSquared,etaSquaredValues}]];
+
+(*Maintenance scan:decreasing eta^2*)
+maintenanceData=Module[{parameters=N[noMemoryStartingParameters],gradientFunction=gradientCompiled[hysteresisK],gradient,effectiveGradient,parameterToChange,step,x,etaValue},Table[etaValue=Sqrt[etaSquared];
+step=0;
+While[step<hysteresisMaximumSteps,gradient=N[gradientFunction[parameters[[1]],parameters[[2]],parameters[[3]],parameters[[4]],etaValue]];
+effectiveGradient=gradient {2.,2.,1.,1.};
+If[Max[Abs[effectiveGradient]]<=hysteresisTolerance,Break[]];
+parameterToChange=First[Ordering[Abs[effectiveGradient],-1]];
+x=If[parameterToChange<=2,Log[(1+parameters[[parameterToChange]])/(1-parameters[[parameterToChange]])],Log[parameters[[parameterToChange]]/(1-parameters[[parameterToChange]])]];
+x=x+hysteresisStepSize effectiveGradient[[parameterToChange]];
+parameters[[parameterToChange]]=If[parameterToChange<=2,2/(1+Exp[-x])-1,1/(1+Exp[-x])];
+step++;];
+{etaSquared,parameters[[1]],parameters[[2]],parameters[[3]],parameters[[4]],step},{etaSquared,Reverse[etaSquaredValues]}]];
+
+hysteresisFigure=Show[ListPlot[{Table[{row[[1]],Max[0.1,Abs[row[[2]]-row[[3]]]]},{row,originData}]},PlotMarkers->{Style["\[FilledSquare]",20,okabeIto[[8]],Opacity[0.9965]]}],ListPlot[{Table[{row[[1]],0.0102+Max[0.1,Abs[row[[2]]-row[[3]]]]},{row,maintenanceData}]},PlotMarkers->{Style["\[FilledUpTriangle]",20,okabeIto[[3]],Opacity[0.49]]}],Frame->True,Axes->False,FrameLabel->{Style[Superscript[\[Eta],2],16],Style["Difference in phenotype",16]},FrameTicksStyle->Directive[FontSize->16],PlotRange->{All,{-0.1,2.1}},ImageSize->520];
+
+hysteresisFigure
+Out[165]= 
+In[166]:= Export["hysteresis.pdf",hysteresisFigure]
+Out[166]= hysteresis.pdf
+Additional SI figure code
+In[10]:= compact=-2 eta^2 q2+(4 eta^4 (4 h-4 h^(1+k)-k+h^2 k-h^k k+h^(2+k) k) (-1+q2) q2)/((-1+h)^2 (1+h^k) k);
+In[11]:= 
+suppRandomizationFigure=RegionPlot[
+  Evaluate[ ( compact/.{h->0,q2->1-suppBeta,k->6,eta->Sqrt[suppEtaSquared]})>0],
+  {suppEtaSquared,1/2,5/2},{suppBeta,0,1},
+  PlotStyle->okabeIto[[3]],BoundaryStyle->Black,
+  Frame->True,
+  FrameLabel->{Style["\[Eta]^2",18,Bold],
+    Style["\[Beta]",18,Bold]},
+  FrameTicksStyle->16,
+  PlotPoints->60,MaxRecursion->2,
+  ImageSize->460,
+  BaseStyle->{FontFamily->"Helvetica"}
+];
+During evaluation of In[11]:= Part::partd: Part specification okabeIto[[3]] is longer than depth of object.
+In[12]:= suppRandomizationFigure
+Out[12]= 
+In[13]:= suppEstablishedMemoryFigure=Plot[
+  {(suppRunLength-1)/suppRunLength*Log[suppRunLength-1]
+    -Log[suppRunLength],-1/2},
+  {suppRunLength,2,20},
+  PlotStyle->{Directive[Black,AbsoluteThickness[2.5]],
+    Directive[GrayLevel[0.5],Dashed,AbsoluteThickness[2]]},
+  Frame->True,Axes->False,
+  FrameLabel->{Style[k,18,Bold],
+    Style["Per-generation log growth",18,Bold]},
+  FrameTicksStyle->16,
+  PlotRange->All,
+  ImageSize->540,
+  BaseStyle->{FontFamily->"Helvetica"}
+];
+In[14]:= suppEstablishedMemoryFigure
+Out[14]= 
+In[19]:= suppCurvature6=Simplify[
+  compact/.{h->suppBeta1+suppBeta2-1,
+    q2->(1-suppBeta1)/(2-suppBeta1-suppBeta2),eta->1,k->6}
+];
+
+suppCurvatureFigure=Plot3D[
+  Evaluate[suppCurvature6],
+  {suppBeta2,0.001,0.999},{suppBeta1,0.001,0.999},
+  RegionFunction->(#3>0&),
+  PlotRange->{0,1},
+  AxesLabel->{Style[Subscript[\[Beta],2],18,Bold],
+    Style[Subscript[\[Beta],1],18,Bold],
+    Style[Row[{Superscript["\[PartialD]",2],"\[Lambda]/\[PartialD]",
+      Superscript[Subscript[z,2],2]}],16,Bold]},
+  TicksStyle->16,
+  PlotLabel->Style["k = 6   eta^2 = 1",16],
+  PlotPoints->60,MaxRecursion->2,
+  BoxRatios->{1,1,0.65},
+  ImageSize->600,
+  BaseStyle->{FontFamily->"Helvetica"}
+];
+
+suppCurvatureFigure
+Out[21]= 
+
+Clear[lambdaNumeric];
+lambdaNumeric[params_List,etaValue_?NumericQ,k_Integer]:=Module[
+  {p=N[params],b,a1,a2,m,scale,r},
+  b={{p[[3]],1-p[[3]]},{1-p[[4]],p[[4]]}};
+  a1=DiagonalMatrix[{
+    Exp[-etaValue^2*(p[[1]]+1)^2],
+    Exp[-etaValue^2*(p[[2]]+1)^2]
+  }].b;
+  a2=DiagonalMatrix[{
+    Exp[-etaValue^2*(p[[1]]-1)^2],
+    Exp[-etaValue^2*(p[[2]]-1)^2]
+  }].b;
+  m=MatrixPower[a1,k].MatrixPower[a2,k];
+  If[!MatrixQ[m,NumberQ]||Dimensions[m]!={2,2},
+    Print["S4 matrix calculation failed at k = ",k,"; parameters = ",p];
+    Abort[]
+  ];
+  scale=Max[Abs[Flatten[m]]];
+  If[!TrueQ[scale>0.],
+    Print["S4 matrix has invalid scale at k = ",k,"; parameters = ",p];
+    Abort[]
+  ];
+  m=m/scale;
+  r=(m[[1,1]]+m[[2,2]]+
+    Sqrt[(m[[1,1]]-m[[2,2]])^2+4*m[[1,2]]*m[[2,1]]])/2;
+  If[!TrueQ[r>0.],
+    Print["S4 growth root is invalid at k = ",k,"; parameters = ",p];
+    Abort[]
+  ];
+  (Log[scale]+Log[r])/(2*k)
+];
+In[111]:= selectionByK=Table[Join[{kValue},Flatten[Transpose[Table[Module[{params={0.,0.10,0.99,0.01},grad,d,plus,minus,index,x,step=0,maximum=0.},While[step<20000,grad=Table[d=Min[1.*^-6,If[j<=2,(1-Abs[params[[j]]])/8,Min[params[[j]],1-params[[j]]]/4]];
+plus=minus=params;
+plus[[j]]+=If[j<=2,2*d,d];
+minus[[j]]-=If[j<=2,2*d,d];
+(Exp[lambdaNumeric[plus,etaValue,kValue]]-Exp[lambdaNumeric[minus,etaValue,kValue]])/(2*d),{j,4}];
+maximum=Max[maximum,Norm[grad]];
+If[Max[Abs[grad]]<=1.*^-4,Break[]];
+index=First[Ordering[Abs[grad],-1]];
+x=Log[If[index<=2,1+params[[index]],params[[index]]]/(1-params[[index]])]+0.2 grad[[index]];
+params[[index]]=If[index<=2,2/(1+Exp[-x])-1,1/(1+Exp[-x])];
+step++;];
+{maximum,step}],{etaValue,{1/(Sqrt[8]*0.45),1/(Sqrt[8]*0.25)}}]]]],{kValue,2,52,5}];
+
+blueSelectionData=selectionByK[[All,{1,2}]];
+redSelectionData=selectionByK[[All,{1,3}]];
+
+In[114]:= selectionKFigure=ListLinePlot[
+  {blueSelectionData,redSelectionData},
+  Frame->True,Axes->False,
+  FrameLabel->{"k","strength of selection"},
+  PlotStyle->{
+    Directive[Blue,AbsoluteThickness[2.2]],
+    Directive[Red,AbsoluteThickness[2.2]]
+  },
+  InterpolationOrder->1,
+  PlotRange->{{0,52},{0,1.3}},
+  BaseStyle->{FontFamily->"Helvetica",FontSize->11,FontWeight->Plain},
+  FrameStyle->Directive[Black,AbsoluteThickness[1.8]],
+  FrameTicksStyle->Directive[Black,9],
+  ImagePadding->{{48,12},{40,12}},
+  ImageSize->520
+];
+In[115]:= selectionKFigure
+Out[115]= 
